@@ -1,0 +1,7 @@
+{
+  "domain": "refundvat.info",
+  "tier": "workers-standard",
+  "cloud_env_id": "portfolio-workers-standard",
+  "check_cmd": "npm run check",
+  "synced_at": "2026-07-10T08:50:18.453034+00:00"
+}

@@ -1,0 +1,3 @@
+# Copied into Codex-managed worktrees (ignored local files only)
+.env.example
+.dev.vars.example
