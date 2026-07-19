@@ -37,5 +37,9 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
-      # build/ is a copy step that cannot fail on its own — assert real output.
-      - run: test -s dist/index.html
+
+      # This repo's `build` is a copy step with `|| true` throughout, so it can
+      # never fail and asserts nothing. The real artifact is the Worker at
+      # src/worker/index.ts, so bundle it. --dry-run neither authenticates nor
+      # deploys; it is a local esbuild pass that catches syntax/type/binding errors.
+      - run: npx wrangler deploy --dry-run --outdir dist-check
