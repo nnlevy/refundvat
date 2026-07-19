@@ -1,0 +1,41 @@
+name: ci
+
+# Why this exists (2026-07-19 portfolio CI-deadlock RCA):
+# A repo with ZERO workflows reports an empty statusCheckRollup on every PR, and
+# two platform loops read that emptiness in opposite directions:
+#   - portfolio_pr_hygiene.pr_checks_green(): no checks -> False -> never merge
+#   - portfolio_remote_dispatch._open_pr_checks_failed(): no rollup -> True ->
+#     close the PR as "stale CI" after 1h and release the queue claim
+# Net effect on nnlevy/partimepreneur was 0 merged PRs across 9 opened, with
+# MERGEABLE/CLEAN work closed untouched. This repo had the same 0-workflow gap.
+#
+# Runs `npm run build` rather than `npm run check`: the repo's `check` script
+# ends in `wrangler deploy --dry-run`, which needs Cloudflare credentials and is
+# deploy-adjacent. Deploys stay owned by the platform deploy gate.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      # build/ is a copy step that cannot fail on its own — assert real output.
+      - run: test -s dist/index.html
